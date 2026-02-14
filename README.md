@@ -8,6 +8,69 @@ AI agent that runs on the teenager's Mac to track compute usage and perform peri
 - **backend/** – FastAPI server that receives events and serves the dashboard API
 - **dashboard/** – Parent web UI (static HTML) to view usage and alerts
 
+## Quick start: same WiFi (teen + parent on one network)
+
+BuddyGuard runs on the **teen's Mac**; the **parent** only needs a browser. Repo: **https://github.com/arpitjain2323/buddyguard**
+
+### On the teenager's Mac (one-time setup)
+
+1. **Clone the repo and go into it:**
+   ```bash
+   git clone https://github.com/arpitjain2323/buddyguard.git
+   cd buddyguard
+   ```
+
+2. **Create a virtualenv and install dependencies:**
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r backend/requirements.txt -r agent/requirements.txt
+   ```
+
+3. **Pick a shared API key** (e.g. a passphrase only you and the parent know). You'll use it in the next steps.
+
+4. **Grant permissions:**  
+   **System Settings → Privacy & Security → Screen Recording** — turn on for Terminal (or the app you use to run the agent).  
+   Optionally **Accessibility** for better window titles.
+
+5. **Edit `agent/config.yaml`:**
+   - Set `device_id` to a name for this laptop (e.g. `teen-laptop`).
+   - Set `backend.api_key` to the shared API key from step 3.
+   - Leave `backend.url` as `http://localhost:8000`.
+
+6. **Install and start the services:**
+   ```bash
+   export BACKEND_API_KEY=your-shared-api-key   # same as in config.yaml
+   bash scripts/install-services.sh
+   launchctl load ~/Library/LaunchAgents/com.cursor.teenmonitor.backend.plist
+   launchctl load ~/Library/LaunchAgents/com.cursor.teenmonitor.agent.plist
+   ```
+   If you didn't set `BACKEND_API_KEY` above, open `~/Library/LaunchAgents/com.cursor.teenmonitor.backend.plist` in a text editor and replace `REPLACE_ME` in the `BACKEND_API_KEY` value with your shared key.
+
+7. **Find this laptop's IP address** (parent will need it):  
+   **System Settings → Network → Wi-Fi → Details** (or your connection). Note the IP (e.g. `192.168.1.105`). Share this and the shared API key with the parent.
+
+Done. Backend and agent start at login and keep running. Logs: `/tmp/teenmonitor-backend.log`, `/tmp/teenmonitor-agent.log` (and `.err`).
+
+### On the parent's Mac (no install)
+
+1. **Get from the teen:** the teen laptop's IP (e.g. `192.168.1.105`) and the **shared API key**.
+
+2. **Open a browser** and go to:  
+   **http://&lt;teen-laptop-ip&gt;:8000**  
+   Example: `http://192.168.1.105:8000`
+
+3. **In the dashboard:** enter the API key, click **Save**, then **Refresh** to see usage and alerts.
+
+4. If the page doesn't load, the teen's Mac firewall may be blocking it: on the **teen's** Mac, **System Settings → Network → Firewall** and allow the connection when prompted, or allow Python.
+
+**"Failed to fetch" or usage summary won't load:**  
+- Confirm **API URL** matches how you opened the dashboard: if you're on the parent's device, it must be `http://<teen-laptop-ip>:8000` (no trailing slash). If you opened the dashboard at `http://192.168.1.105:8000`, leave API URL as that (or leave blank — the dashboard can default to the current host).  
+- Backend must be running on the teen's Mac (`launchctl list | grep teenmonitor` should show both services).  
+- Same WiFi; firewall on the teen's Mac may need to allow Python/incoming connections.
+
+---
+
 ## Requirements
 
 - macOS (for screen capture and frontmost-app detection)
