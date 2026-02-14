@@ -3,27 +3,32 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.cursor.teenmonitor.agent</string>
+  <string>com.cursor.teenmonitor.backend</string>
   <key>ProgramArguments</key>
   <array>
     <string>__PROJECT_ROOT__/venv/bin/python</string>
     <string>-m</string>
-    <string>agent.agent</string>
+    <string>uvicorn</string>
+    <string>main:app</string>
+    <string>--host</string>
+    <string>0.0.0.0</string>
+    <string>--port</string>
+    <string>8000</string>
   </array>
   <key>WorkingDirectory</key>
-  <string>__PROJECT_ROOT__</string>
+  <string>__PROJECT_ROOT__/backend</string>
   <key>RunAtLoad</key>
   <true/>
   <key>KeepAlive</key>
   <true/>
   <key>StandardOutPath</key>
-  <string>/tmp/teenmonitor-agent.log</string>
+  <string>/tmp/teenmonitor-backend.log</string>
   <key>StandardErrorPath</key>
-  <string>/tmp/teenmonitor-agent.err</string>
+  <string>/tmp/teenmonitor-backend.err</string>
   <key>EnvironmentVariables</key>
   <dict>
-    <key>PYTHONPATH</key>
-    <string>__PROJECT_ROOT__</string>
+    <key>BACKEND_API_KEY</key>
+    <string>__BACKEND_API_KEY__</string>
   </dict>
 </dict>
 </plist>

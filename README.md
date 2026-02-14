@@ -67,6 +67,59 @@ To stop: `launchctl unload ~/Library/LaunchAgents/com.cursor.teenmonitor.agent.p
 
 Logs: `/tmp/teenmonitor-agent.log` and `/tmp/teenmonitor-agent.err`.
 
+## Production setup on the teen's laptop
+
+Run backend and agent automatically at login so the stack keeps running after reboot. Parent can open the dashboard from the same laptop or from another device on the same Wi‑Fi.
+
+### One-time setup
+
+1. **Clone or copy the repo** to the teen's Mac (e.g. `~/buddyguard`).
+
+2. **Create a venv and install dependencies:**
+   ```bash
+   cd ~/buddyguard
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r backend/requirements.txt -r agent/requirements.txt
+   ```
+
+3. **Choose a shared API key** (e.g. a passphrase). You will set it in the backend plist and in `agent/config.yaml` as `backend.api_key`.
+
+4. **Grant permissions:** System Settings → Privacy & Security → **Screen Recording** (required). Optionally **Accessibility** for window titles.
+
+5. **Edit `agent/config.yaml`:** Set `device_id` (e.g. `teen-laptop`) and `backend.api_key` to the same secret as the backend.
+
+6. **Install the LaunchAgents** (backend + agent) with the install script:
+   ```bash
+   cd ~/buddyguard
+   export BACKEND_API_KEY=your-secret-key   # optional: bakes into plist
+   bash scripts/install-services.sh
+   ```
+   If you did not set `BACKEND_API_KEY` above, edit `~/Library/LaunchAgents/com.cursor.teenmonitor.backend.plist` and replace `REPLACE_ME` in the `BACKEND_API_KEY` environment value with your secret.
+
+7. **Load the services:**
+   ```bash
+   launchctl load ~/Library/LaunchAgents/com.cursor.teenmonitor.backend.plist
+   launchctl load ~/Library/LaunchAgents/com.cursor.teenmonitor.agent.plist
+   ```
+
+### Using the dashboard
+
+- **On the same laptop:** Open **http://localhost:8000** in a browser. The backend serves the parent dashboard at `/`; set the API key in the UI if needed and click Save / Refresh.
+- **From another device (e.g. parent's phone):** Open **http://&lt;teen-laptop-ip&gt;:8000** (find the laptop's IP in System Settings → Network). In the dashboard, set API URL to that address and the same API key.
+
+### Stop or restart
+
+- Unload (stop):  
+  `launchctl unload ~/Library/LaunchAgents/com.cursor.teenmonitor.backend.plist`  
+  `launchctl unload ~/Library/LaunchAgents/com.cursor.teenmonitor.agent.plist`
+- Reload after changing plists or config: unload then load again.
+
+### Logs
+
+- Backend: `/tmp/teenmonitor-backend.log` and `/tmp/teenmonitor-backend.err`
+- Agent: `/tmp/teenmonitor-agent.log` and `/tmp/teenmonitor-agent.err`
+
 ## Config (agent/config.yaml)
 
 - **capture.interval_seconds** – how often to take a screenshot (default 45)
