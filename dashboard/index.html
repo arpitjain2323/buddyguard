@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parent Dashboard – Teen Monitor</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --card: #1a2332;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --alert: #f85149;
+      --ok: #3fb950;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 1.5rem;
+      line-height: 1.5;
+    }
+    h1 { font-size: 1.5rem; margin-top: 0; }
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .card h2 { font-size: 1rem; color: var(--muted); margin: 0 0 0.75rem 0; }
+    input, button {
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid #30363d;
+      background: var(--bg);
+      color: var(--text);
+    }
+    button {
+      cursor: pointer;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+    }
+    button:hover { opacity: 0.9; }
+    .alert-item {
+      border-left: 3px solid var(--alert);
+      padding-left: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    .alert-item .cats { color: var(--alert); font-size: 0.9rem; }
+    .alert-item .time { color: var(--muted); font-size: 0.85rem; }
+    .alert-item .alert-meta { color: var(--muted); font-size: 0.85rem; word-break: break-all; }
+    .usage-table { width: 100%; border-collapse: collapse; }
+    .usage-table th, .usage-table td { text-align: left; padding: 0.5rem; }
+    .usage-table th { color: var(--muted); font-weight: 600; }
+    .usage-table-urls .url-cell { max-width: 60vw; word-break: break-all; font-size: 0.9rem; }
+    .usage-table-urls .url-sub { color: var(--muted); font-size: 0.8rem; }
+    .badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 6px; background: #21262d; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <h1>Parent Dashboard</h1>
+  <div class="card">
+    <h2>Backend</h2>
+    <p>
+      <label>API URL: <input type="text" id="apiUrl" value="http://localhost:8000" size="40" /></label>
+      <label> API Key: <input type="password" id="apiKey" placeholder="Bearer key" size="24" /></label>
+      <button id="saveSettings">Save</button>
+    </p>
+  </div>
+  <div class="card">
+    <h2>Usage summary</h2>
+    <div id="usageSummary">Load with "Refresh" or enter API key and refresh.</div>
+  </div>
+  <div class="card">
+    <h2>Alerts (harmful content)</h2>
+    <button id="refreshAlerts">Refresh</button>
+    <div id="alertsList" style="margin-top: 0.75rem;"></div>
+  </div>
+
+  <script>
+    const API_URL_KEY = 'teen_monitor_api_url';
+    const API_KEY_KEY = 'teen_monitor_api_key';
+
+    function getApiUrl() { return localStorage.getItem(API_URL_KEY) || 'http://localhost:8000'; }
+    function getApiKey() { return localStorage.getItem(API_KEY_KEY) || ''; }
+    document.getElementById('apiUrl').value = getApiUrl();
+    document.getElementById('apiKey').value = getApiKey();
+
+    document.getElementById('saveSettings').onclick = () => {
+      localStorage.setItem(API_URL_KEY, document.getElementById('apiUrl').value.trim());
+      localStorage.setItem(API_KEY_KEY, document.getElementById('apiKey').value);
+      loadUsage();
+      loadAlerts();
+    };
+
+    function headers() {
+      const key = getApiKey();
+      return key ? { 'Authorization': 'Bearer ' + key } : {};
+    }
+
+    async function loadUsage() {
+      const el = document.getElementById('usageSummary');
+      try {
+        const r = await fetch(getApiUrl() + '/api/usage/summary', { headers: headers() });
+        if (!r.ok) { el.textContent = 'Error: ' + r.status + ' (set API key if needed)'; return; }
+        const data = await r.json();
+        const s = data.summary;
+        if (!s) { el.innerHTML = '<p>No usage data yet.</p>'; return; }
+        const totalMin = Math.round((s.total_seconds || 0) / 60);
+        let table = '<p><strong>Session total: ' + totalMin + ' min</strong></p>';
+        if (s.app_seconds && Object.keys(s.app_seconds).length) {
+          table += '<table class="usage-table"><tr><th>App</th><th>Time (min)</th></tr>';
+          const entries = Object.entries(s.app_seconds).sort((a, b) => b[1] - a[1]).slice(0, 15);
+          entries.forEach(([app, sec]) => {
+            table += '<tr><td>' + escapeHtml(app) + '</td><td>' + Math.round(sec / 60) + '</td></tr>';
+          });
+          table += '</table>';
+        }
+        if (s.last_app) table += '<p class="muted">Last active: ' + escapeHtml(s.last_app) + '</p>';
+        if (s.url_seconds && Object.keys(s.url_seconds).length) {
+          table += '<p style="margin-top:1rem;"><strong>Time per URL (Chrome)</strong></p>';
+          table += '<table class="usage-table usage-table-urls"><tr><th>Page / URL</th><th>Time (min)</th></tr>';
+          const urlTitles = s.url_titles || {};
+          const urlEntries = Object.entries(s.url_seconds).sort((a, b) => b[1] - a[1]).slice(0, 20);
+          urlEntries.forEach(([url, sec]) => {
+            const title = urlTitles[url];
+            const display = title ? escapeHtml(title) : escapeHtml(url);
+            const tooltip = title ? (escapeHtml(title) + ' — ' + escapeHtml(url)) : escapeHtml(url);
+            const sub = title ? '<br><span class="url-sub">' + escapeHtml(url) + '</span>' : '';
+            table += '<tr><td class="url-cell" title="' + tooltip + '">' + display + sub + '</td><td>' + Math.round(sec / 60) + '</td></tr>';
+          });
+          table += '</table>';
+        }
+        if (s.last_url) table += '<p class="muted">Last URL: ' + escapeHtml(s.last_url) + '</p>';
+        el.innerHTML = table;
+      } catch (e) {
+        el.textContent = 'Failed to load: ' + e.message;
+      }
+    }
+
+    async function loadAlerts() {
+      const el = document.getElementById('alertsList');
+      try {
+        const r = await fetch(getApiUrl() + '/api/alerts', { headers: headers() });
+        if (!r.ok) { el.textContent = 'Error: ' + r.status; return; }
+        const data = await r.json();
+        const alerts = data.alerts || [];
+        if (!alerts.length) { el.innerHTML = '<p>No alerts.</p>'; return; }
+        el.innerHTML = alerts.map(a => {
+          const p = a.payload || {};
+          const t = new Date((a.timestamp || 0) * 1000).toLocaleString();
+          const cats = p.categories ? p.categories.join(', ') : '—';
+          const details = p.details ? escapeHtml(String(p.details)).slice(0, 120) : '';
+          let appUrl = '';
+          if (p.app) appUrl += '<br><span class="alert-meta">App: ' + escapeHtml(p.app) + '</span>';
+          if (p.url) appUrl += '<br><span class="alert-meta">URL: ' + escapeHtml(p.url) + '</span>';
+          if (p.title) appUrl += '<br><span class="alert-meta">Page: ' + escapeHtml(p.title) + '</span>';
+          return '<div class="alert-item"><span class="cats">' + escapeHtml(cats) + '</span><br><span class="time">' + t + '</span>' + appUrl + (details ? '<br><small>' + details + '</small>' : '') + '</div>';
+        }).join('');
+      } catch (e) {
+        el.textContent = 'Failed to load: ' + e.message;
+      }
+    }
+
+    function escapeHtml(s) {
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+
+    document.getElementById('refreshAlerts').onclick = () => { loadUsage(); loadAlerts(); };
+    loadUsage();
+    loadAlerts();
+  </script>
+</body>
+</html>

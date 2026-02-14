@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Test page (for agent alert demo)</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #1a1a2e;
+      color: #eee;
+    }
+    .box {
+      text-align: center;
+      padding: 2rem;
+      border: 2px solid #444;
+      border-radius: 12px;
+    }
+    .trigger {
+      font-size: 3rem;
+      font-weight: bold;
+      letter-spacing: 0.1em;
+      margin: 1rem 0;
+      color: #f88;
+    }
+    .note {
+      font-size: 0.9rem;
+      color: #888;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <p>Alert test – blocklisted phrase visible on screen:</p>
+    <p class="trigger">self harm</p>
+    <p class="note">(Keyword provider will flag this. Open this page, wait for agent capture ~45s, then check dashboard Alerts.)</p>
+  </div>
+</body>
+</html>

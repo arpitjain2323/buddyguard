@@ -1,0 +1,48 @@
+# Teen Compute & Safety Agent - Configuration
+# Path: agent/config.yaml
+
+# Device identity (set per installation)
+device_id: "teen-device-1"
+
+# Backend API
+backend:
+  url: "http://localhost:8000"
+  api_key: "test-agent-123"  # Set via env BACKEND_API_KEY or here (avoid committing secrets)
+  upload_interval_seconds: 30   # How often to send usage summary (gentler on system)
+
+# Screen capture & content check
+capture:
+  interval_seconds: 60         # How often to capture (60 = lighter load)
+  classifier_run_every_n: 1    # Run harmful-content check every N captures (2 = half the OCR load)
+  screenshot_dir: "/Users/testagent/Screenshots"   # Directory to save each capture (created if missing)
+  store_screenshot_on_alert: false   # If true, upload redacted/blurred image with alert
+  screenshot_retention_seconds: 0    # 0 = do not persist locally
+
+# Harmful content detection
+classifier:
+  enabled: true
+  categories:
+    - inappropriate
+    - violence
+    - self_harm
+    - bullying_hate
+  alert_cooldown_seconds: 300        # Max one alert per category per 5 minutes
+  confidence_threshold: 0.7
+  # provider: "openai" (needs openai_api_key) or "keyword" (no API; OCR + blocklist)
+  provider: "keyword"
+  openai_api_key: ""                 # Or set OPENAI_API_KEY env (only for provider: openai)
+  # Optional: override blocklist for provider "keyword" (defaults built-in)
+  # keywords:
+  #   inappropriate: ["porn", "xxx", "nsfw", ...]
+  #   violence: ["kill", "murder", ...]
+  #   self_harm: ["suicide", "self harm", ...]
+  #   bullying_hate: ["hate", "kill yourself", ...]
+
+# Compute usage tracking
+usage:
+  track_time: true
+  track_active_app: true
+  track_window_title: true
+  track_browser_url: true   # When Chrome is frontmost, track time per URL
+  track_cpu_memory: false
+  poll_interval_seconds: 15   # How often to poll frontmost app (15 = fewer subprocess calls)
