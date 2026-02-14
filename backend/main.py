@@ -2,10 +2,12 @@
 Parent backend: ingest events from teen agent, store them, serve API for dashboard.
 """
 import os
+from pathlib import Path
 from typing import List, Optional
 
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 # In-memory store (replace with DB for production). Capped to avoid unbounded growth.
@@ -110,6 +112,12 @@ def get_alerts(
         alerts = [e for e in alerts if e.get("timestamp", 0) >= since]
     alerts.sort(key=lambda e: e.get("timestamp", 0), reverse=True)
     return {"alerts": alerts[:limit]}
+
+
+# Serve parent dashboard at / (after API routes so /api/* takes precedence)
+_dashboard_dir = Path(__file__).resolve().parent.parent / "dashboard"
+if _dashboard_dir.is_dir():
+    app.mount("/", StaticFiles(directory=str(_dashboard_dir), html=True), name="dashboard")
 
 
 if __name__ == "__main__":
