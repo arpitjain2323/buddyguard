@@ -30,7 +30,7 @@ BuddyGuard runs on the **teen's Mac**; the **parent** only needs a browser. Repo
 3. **Pick a shared API key** (e.g. a passphrase only you and the parent know). You'll use it in the next steps.
 
 4. **Grant permissions:**  
-   **System Settings → Privacy & Security → Screen Recording** — turn on for Terminal (or the app you use to run the agent).  
+   **System Settings → Privacy & Security → Screen Recording** — turn on for Terminal (or the app you run the agent from). When using LaunchAgents, run the agent once from Terminal so macOS prompts for Screen Recording; grant it so captures show the **frontmost window** instead of only the desktop/screensaver.  
    Optionally **Accessibility** for better window titles.
 
 5. **Edit `agent/config.yaml`:**
@@ -148,7 +148,7 @@ Run backend and agent automatically at login so the stack keeps running after re
 
 3. **Choose a shared API key** (e.g. a passphrase). You will set it in the backend plist and in `agent/config.yaml` as `backend.api_key`.
 
-4. **Grant permissions:** System Settings → Privacy & Security → **Screen Recording** (required). Optionally **Accessibility** for window titles.
+4. **Grant permissions:** System Settings → Privacy & Security → **Screen Recording** (required). Run the agent once from Terminal so macOS prompts for Screen Recording; grant it so captures show the frontmost window instead of only the desktop. Optionally **Accessibility** for window titles.
 
 5. **Edit `agent/config.yaml`:** Set `device_id` (e.g. `teen-laptop`) and `backend.api_key` to the same secret as the backend.
 
