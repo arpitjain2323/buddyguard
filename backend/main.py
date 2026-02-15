@@ -7,7 +7,7 @@ from typing import List, Optional
 
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 # In-memory store (replace with DB for production). Capped to avoid unbounded growth.
@@ -114,10 +114,17 @@ def get_alerts(
     return {"alerts": alerts[:limit]}
 
 
-# Serve parent dashboard at / (after API routes so /api/* takes precedence)
-_dashboard_dir = Path(__file__).resolve().parent.parent / "dashboard"
-if _dashboard_dir.is_dir():
-    app.mount("/", StaticFiles(directory=str(_dashboard_dir), html=True), name="dashboard")
+# Serve parent dashboard at / and /index.html (explicit routes so /api/* is never shadowed)
+_dashboard_index = Path(__file__).resolve().parent.parent / "dashboard" / "index.html"
+if _dashboard_index.is_file():
+
+    @app.get("/")
+    def serve_dashboard_root():
+        return FileResponse(str(_dashboard_index))
+
+    @app.get("/index.html")
+    def serve_dashboard_index():
+        return FileResponse(str(_dashboard_index))
 
 
 if __name__ == "__main__":
