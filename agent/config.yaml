@@ -12,7 +12,7 @@ backend:
 
 # Screen capture & content check
 capture:
-  interval_seconds: 60         # How often to capture (60 = lighter load)
+  interval_seconds: 300        # How often to capture (60 = lighter load)
   classifier_run_every_n: 1    # Run harmful-content check every N captures (2 = half the OCR load)
   screenshot_dir: "/Users/testagent/Screenshots"   # Directory to save each capture (created if missing)
   store_screenshot_on_alert: false   # If true, upload redacted/blurred image with alert
