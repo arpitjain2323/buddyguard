@@ -1,0 +1,7 @@
+#!/bin/bash
+# Launcher run inside the .app so the agent runs in the user's graphical session (needed for Screen Recording when started via LaunchAgent).
+# From .../BuddyGuardAgent.app/Contents/MacOS/BuddyGuardAgent -> project root (parent of .app)
+ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
+export PYTHONPATH="$ROOT"
+exec >> /tmp/teenmonitor-agent.log 2>> /tmp/teenmonitor-agent.err
+exec "$ROOT/venv/bin/python" -m agent.agent

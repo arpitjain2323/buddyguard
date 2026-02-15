@@ -6,24 +6,16 @@
   <string>com.cursor.teenmonitor.agent</string>
   <key>ProgramArguments</key>
   <array>
-    <string>__PROJECT_ROOT__/venv/bin/python</string>
-    <string>-m</string>
-    <string>agent.agent</string>
+    <string>open</string>
+    <string>__PROJECT_ROOT__/BuddyGuardAgent.app</string>
   </array>
-  <key>WorkingDirectory</key>
-  <string>__PROJECT_ROOT__</string>
   <key>RunAtLoad</key>
   <true/>
   <key>KeepAlive</key>
-  <true/>
+  <false/>
   <key>StandardOutPath</key>
-  <string>/tmp/teenmonitor-agent.log</string>
+  <string>/tmp/teenmonitor-agent-open.log</string>
   <key>StandardErrorPath</key>
-  <string>/tmp/teenmonitor-agent.err</string>
-  <key>EnvironmentVariables</key>
-  <dict>
-    <key>PYTHONPATH</key>
-    <string>__PROJECT_ROOT__</string>
-  </dict>
+  <string>/tmp/teenmonitor-agent-open.err</string>
 </dict>
 </plist>
