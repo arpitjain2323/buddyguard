@@ -2,19 +2,19 @@
 # Path: agent/config.yaml
 
 # Device identity (set per installation)
-device_id: "teen-device-1"
+device_id: "avyukt-laptop"
 
 # Backend API
 backend:
   url: "http://localhost:8000"
-  api_key: "test-agent-123"  # Set via env BACKEND_API_KEY or here (avoid committing secrets)
+  api_key: "agent123"  # Set via env BACKEND_API_KEY or here (avoid committing secrets)
   upload_interval_seconds: 30   # How often to send usage summary (gentler on system)
 
 # Screen capture & content check
 capture:
   interval_seconds: 300        # How often to capture (60 = lighter load)
   classifier_run_every_n: 1    # Run harmful-content check every N captures (2 = half the OCR load)
-  screenshot_dir: "/Users/testagent/Screenshots"   # Directory to save each capture (created if missing)
+  screenshot_dir: "/Users/avyukt/Screenshots"   # Directory to save each capture (created if missing)
   store_screenshot_on_alert: false   # If true, upload redacted/blurred image with alert
   screenshot_retention_seconds: 0    # 0 = do not persist locally
 
