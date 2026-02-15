@@ -80,6 +80,40 @@ def _get_window_id_for_pid(pid: int) -> Optional[int]:
         return None
 
 
+def _get_first_onscreen_window_id() -> Optional[int]:
+    """Return the first (frontmost) on-screen window ID from Quartz, without needing Accessibility.
+    List is front-to-back; skip desktop/screensaver so we get a real app window when possible.
+    """
+    try:
+        import Quartz
+
+        opts = getattr(
+            Quartz,
+            "kCGWindowListOptionOnScreenOnly",
+            _OPTS["kCGWindowListOptionOnScreenOnly"],
+        ) | getattr(
+            Quartz,
+            "kCGWindowListExcludeDesktopElements",
+            _OPTS["kCGWindowListExcludeDesktopElements"],
+        )
+        null_id = getattr(Quartz, "kCGNullWindowID", _kCGNullWindowID)
+        window_list = Quartz.CGWindowListCopyWindowInfo(opts, null_id)
+        if not window_list:
+            return None
+        owner_key = getattr(Quartz, "kCGWindowOwnerName", "kCGWindowOwnerName")
+        num_key = getattr(Quartz, "kCGWindowNumber", "kCGWindowNumber")
+        for w in window_list:
+            owner = str(w.get(owner_key) or "")
+            if owner in ("Window Server", "ScreenSaverEngine", "loginwindow"):
+                continue
+            wid = w.get(num_key)
+            if wid is not None:
+                return int(wid)
+        return None
+    except Exception:
+        return None
+
+
 def _cgimage_to_pil(cgimage) -> Optional[Image.Image]:
     """Convert a Quartz CGImage to PIL Image. Handles BGRA and row stride."""
     try:
@@ -180,6 +214,13 @@ def capture_screen(output_path: Optional[Path] = None) -> Optional[Image.Image]:
         img = _capture_window_quartz(wid)
         if img is not None:
             log.info("Capture: frontmost window (PID %s, WID %s)", pid, wid)
+    # 1b) If we had no pid/wid (e.g. Accessibility denied), try first window from Quartz list (no AppleScript)
+    if img is None:
+        first_wid = _get_first_onscreen_window_id()
+        if first_wid is not None:
+            img = _capture_window_quartz(first_wid)
+            if img is not None:
+                log.info("Capture: first window via Quartz (WID %s)", first_wid)
     if img is None and (pid is None or wid is None):
         log.info("Capture: no frontmost window (pid=%s, wid=%s) — grant Accessibility to BuddyGuardAgent.app", pid, wid)
     # 2) Full screen via Quartz (in-process)

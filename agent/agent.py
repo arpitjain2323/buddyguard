@@ -61,6 +61,7 @@ def main_loop(config_path: Optional[Path] = None):
     upload_interval = backend_cfg.get("upload_interval_seconds", 60)
 
     capture_cfg = config.get("capture", {})
+    capture_enabled = capture_cfg.get("enabled", True)
     capture_interval = capture_cfg.get("interval_seconds", 60)
     classifier_run_every_n = max(1, capture_cfg.get("classifier_run_every_n", 1))
     screenshot_dir = capture_cfg.get("screenshot_dir")
@@ -102,10 +103,11 @@ def main_loop(config_path: Optional[Path] = None):
     capture_count = 0
 
     log.info(
-        "Agent started | device_id=%s | backend=%s | upload_every=%ss | capture_every=%ss | classifier=%s",
+        "Agent started | device_id=%s | backend=%s | upload_every=%ss | capture=%s (every %ss) | classifier=%s",
         device_id,
         backend_url,
         upload_interval,
+        "on" if capture_enabled else "off",
         capture_interval,
         "on" if classifier else "off",
     )
@@ -131,8 +133,8 @@ def main_loop(config_path: Optional[Path] = None):
                 log.info("Usage uploaded | total=%s min | apps=%s", total_min, list(apps.keys())[:5])
             last_upload = now
 
-        # Screen capture + harmful content check
-        if now - last_capture >= capture_interval:
+        # Screen capture + harmful content check (skipped if capture.enabled: false)
+        if capture_enabled and now - last_capture >= capture_interval:
             last_capture = now
             capture_count += 1
             out_path = None

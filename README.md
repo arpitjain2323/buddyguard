@@ -196,6 +196,7 @@ Run backend and agent automatically at login so the stack keeps running after re
 
 ## Config (agent/config.yaml)
 
+- **capture.enabled** – set to `false` to turn off screen capture and harmful-content checks (default true)
 - **capture.interval_seconds** – how often to take a screenshot (default 45)
 - **capture.store_screenshot_on_alert** – whether to attach a redacted screenshot to alerts (default false)
 - **classifier.enabled** – turn harmful-content detection on/off
