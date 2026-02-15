@@ -4,4 +4,9 @@
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 export PYTHONPATH="$ROOT"
 exec >> /tmp/teenmonitor-agent.log 2>> /tmp/teenmonitor-agent.err
-exec "$ROOT/venv/bin/python" -m agent.agent
+# On Apple Silicon, force native arm64 so PIL/venv match (avoids Rosetta x86_64 mismatch)
+if [ "$(uname -m)" = "arm64" ]; then
+  exec arch -arm64 "$ROOT/venv/bin/python" -m agent.agent
+else
+  exec "$ROOT/venv/bin/python" -m agent.agent
+fi
