@@ -91,7 +91,7 @@
         return window.location.origin;
       return 'http://localhost:8000';
     }
-    function getApiUrl() { return localStorage.getItem(API_URL_KEY) || getDefaultApiUrl(); }
+    function getApiUrl() { return (localStorage.getItem(API_URL_KEY) || getDefaultApiUrl()).replace(/\/+$/, ''); }
     function getApiKey() { return localStorage.getItem(API_KEY_KEY) || ''; }
     document.getElementById('apiUrl').value = getApiUrl();
     document.getElementById('apiKey').value = getApiKey();
@@ -111,8 +111,16 @@
     async function loadUsage() {
       const el = document.getElementById('usageSummary');
       try {
-        const r = await fetch(getApiUrl() + '/api/usage/summary', { headers: headers() });
-        if (!r.ok) { el.textContent = 'Error: ' + r.status + ' (set API key if needed)'; return; }
+        const base = getApiUrl();
+        const r = await fetch(base + '/api/usage/summary', { headers: headers() });
+        if (!r.ok) {
+          let msg = 'Error: ' + r.status;
+          if (r.status === 401) msg += ' — wrong or missing API key; set it above and Save.';
+          else if (r.status === 404) msg += ' — backend may need restart (see README). Check API URL: ' + base;
+          else msg += ' (set API key if needed)';
+          el.textContent = msg;
+          return;
+        }
         const data = await r.json();
         const s = data.summary;
         if (!s) { el.innerHTML = '<p>No usage data yet.</p>'; return; }
@@ -157,7 +165,10 @@
       const el = document.getElementById('alertsList');
       try {
         const r = await fetch(getApiUrl() + '/api/alerts', { headers: headers() });
-        if (!r.ok) { el.textContent = 'Error: ' + r.status; return; }
+        if (!r.ok) {
+          el.textContent = 'Error: ' + r.status + (r.status === 401 ? ' — set API key and Save.' : '');
+          return;
+        }
         const data = await r.json();
         const alerts = data.alerts || [];
         if (!alerts.length) { el.innerHTML = '<p>No alerts.</p>'; return; }
