@@ -32,7 +32,7 @@ BuddyGuard runs on the **teen's Mac**; the **parent** only needs a browser. Repo
 4. **Grant Screen Recording to the agent app:**  
    The agent is started at login via **BuddyGuardAgent.app** (so it runs in your graphical session and capture works). You must add that app to Screen Recording:  
    **System Settings → Privacy & Security → Screen Recording → +** → go to your project folder (e.g. `~/buddyguard`) → select **BuddyGuardAgent.app** → Open → turn it **on**.  
-   Optionally **Accessibility** for better window titles.
+   Also add **BuddyGuardAgent.app** to **Accessibility** (same + button, same app) — required so the agent can see which app is frontmost and capture that window instead of the desktop.
 
 5. **Edit `agent/config.yaml`:**
    - Set `device_id` to a name for this laptop (e.g. `teen-laptop`).
@@ -71,8 +71,8 @@ Done. Backend and agent start at login. The agent runs inside **BuddyGuardAgent.
 - Backend must be running on the teen's Mac (`launchctl list | grep teenmonitor` should show both services).  
 - Same WiFi; firewall on the teen's Mac may need to allow Python/incoming connections.
 
-**Screenshots show only desktop/screensaver when using LaunchAgent:**  
-- The agent must run in your graphical session. It now runs via **BuddyGuardAgent.app**; add **BuddyGuardAgent.app** to Screen Recording (step 4). Unload and load the agent plist, then log out and back in (or restart) so the app is started by the LaunchAgent with the new setup.
+**Screenshots show only desktop / log says "Capture: full screen via Quartz":**  
+- We need both **Screen Recording** and **Accessibility** for **BuddyGuardAgent.app**. Without Accessibility, the agent can’t see which app is frontmost, so it falls back to full-screen capture (which often shows desktop). **System Settings → Privacy & Security → Accessibility** — add **BuddyGuardAgent.app** (from your project folder) and turn it **on**. Then **Screen Recording** — ensure **BuddyGuardAgent.app** is on. Restart the agent: `pkill -f agent.agent` then `open ~/buddyguard/BuddyGuardAgent.app`. After the next capture, `grep "Capture:" /tmp/teenmonitor-agent.log` should show `Capture: frontmost window` instead of `Capture: full screen via Quartz`. If you see `Capture: no frontmost window (pid=None, wid=None)`, that confirms Accessibility is missing or denied.
 
 **PIL "incompatible architecture (have 'arm64', need 'x86_64')" (or the reverse):**  
 - The venv was likely created under Rosetta (x86_64) while the app runs as arm64 (or vice versa). Recreate the venv for your Mac’s native architecture: run `bash scripts/recreate-venv-native.sh` from the project folder, then start the agent again. On Apple Silicon, that script creates an arm64 venv so it matches the app.
@@ -159,7 +159,7 @@ Run backend and agent automatically at login so the stack keeps running after re
 
 3. **Choose a shared API key** (e.g. a passphrase). You will set it in the backend plist and in `agent/config.yaml` as `backend.api_key`.
 
-4. **Grant permissions:** System Settings → Privacy & Security → **Screen Recording** (required). Add **BuddyGuardAgent.app** (in the project folder) to the list so screen capture works when the agent runs via LaunchAgent. Optionally **Accessibility** for window titles.
+4. **Grant permissions:** System Settings → Privacy & Security → **Screen Recording** and **Accessibility** (both required). Add **BuddyGuardAgent.app** (in the project folder) to both lists so screen capture gets the frontmost window, not the desktop.
 
 5. **Edit `agent/config.yaml`:** Set `device_id` (e.g. `teen-laptop`) and `backend.api_key` to the same secret as the backend.
 

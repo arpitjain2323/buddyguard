@@ -175,17 +175,18 @@ def capture_screen(output_path: Optional[Path] = None) -> Optional[Image.Image]:
     img = None
     # 1) Frontmost app's window via Quartz (in-process)
     pid = _get_frontmost_pid()
-    if pid is not None:
-        wid = _get_window_id_for_pid(pid)
-        if wid is not None:
-            img = _capture_window_quartz(wid)
-            if img is not None:
-                log.debug("Captured frontmost window (PID %s, WID %s)", pid, wid)
+    wid = _get_window_id_for_pid(pid) if pid is not None else None
+    if pid is not None and wid is not None:
+        img = _capture_window_quartz(wid)
+        if img is not None:
+            log.info("Capture: frontmost window (PID %s, WID %s)", pid, wid)
+    if img is None and (pid is None or wid is None):
+        log.info("Capture: no frontmost window (pid=%s, wid=%s) — grant Accessibility to BuddyGuardAgent.app", pid, wid)
     # 2) Full screen via Quartz (in-process)
     if img is None:
         img = _capture_fullscreen_quartz()
         if img is not None:
-            log.debug("Captured full screen via Quartz")
+            log.info("Capture: full screen via Quartz (may show desktop if no Screen Recording)")
     # 3) Fallback: screencapture CLI (frontmost window then full screen)
     if img is None:
         path = output_path or Path(tempfile.gettempdir()) / f"screen_{int(time.time())}.png"
@@ -200,7 +201,7 @@ def capture_screen(output_path: Optional[Path] = None) -> Optional[Image.Image]:
             img = Image.open(path).convert("RGB")
             if output_path is None:
                 path.unlink(missing_ok=True)
-            log.debug("Captured via screencapture (window=%s)", wid)
+            log.info("Capture: screencapture (window=%s)", wid)
         except Exception:
             try:
                 subprocess.run(
