@@ -77,6 +77,9 @@ Done. Backend and agent start at login. The agent runs inside **BuddyGuardAgent.
 **PIL "incompatible architecture (have 'arm64', need 'x86_64')" (or the reverse):**  
 - The venv was likely created under Rosetta (x86_64) while the app runs as arm64 (or vice versa). Recreate the venv for your Mac’s native architecture: run `bash scripts/recreate-venv-native.sh` from the project folder, then start the agent again. On Apple Silicon, that script creates an arm64 venv so it matches the app.
 
+**"Invalid API key" (401) even after setting the same key:**  
+- The backend only reads `BACKEND_API_KEY` when it **starts**. Use: `bash scripts/set-api-key.sh "your-exact-secret"` to set the key in the installed plist and restart the backend. Then set the same string in `agent/config.yaml` under `backend.api_key` and in the dashboard, and restart the agent: `pkill -f agent.agent` then `open ~/buddyguard/BuddyGuardAgent.app`.
+
 ---
 
 ## Requirements
