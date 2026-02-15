@@ -29,8 +29,17 @@ BuddyGuard runs on the **teen's Mac**; the **parent** only needs a browser. Repo
 
 3. **Pick a shared API key** (e.g. a passphrase only you and the parent know). You'll use it in the next steps.
 
-4. **Grant permissions:**  
-   **System Settings → Privacy & Security → Screen Recording** — turn on for Terminal (or the app you run the agent from). When using LaunchAgents, run the agent once from Terminal so macOS prompts for Screen Recording; grant it so captures show the **frontmost window** instead of only the desktop/screensaver.  
+4. **Grant permissions (important for LaunchAgents):**  
+   When the agent runs as a LaunchAgent, **launchd** starts Python directly — your terminal is not running. Adding only the terminal to Screen Recording is **not enough**; you’ll get desktop/screensaver only. The process that must have Screen Recording is the **venv Python** binary.  
+   **If you can’t add python3 via the “+” button** (macOS often only lets you pick .app bundles), do this instead:  
+   - Open **Terminal** (or iTerm2).  
+   - Run the agent **once** using the **full path** to the venv Python, e.g.:  
+     `~/buddyguard/venv/bin/python -m agent.agent`  
+     (replace `~/buddyguard` with your project path if different).  
+   - Wait for the first screen capture (about 1 minute, or whatever `capture.interval_seconds` is in `agent/config.yaml`).  
+   - When macOS shows **“python3” (or “Python”) wants to record the screen”**, click **OK** / **Allow**. That adds the Python binary to Screen Recording.  
+   - Stop the agent with **Ctrl+C**, then start it via LaunchAgent as in step 6. The same Python will now have permission when launchd runs it.  
+   **If you can add it manually:** System Settings → Privacy & Security → Screen Recording → **+** → press **Cmd+Shift+G** and go to `~/buddyguard/venv/bin` → if **python3** (or **python**) is listed and selectable, choose it and Open; enable it. Then unload and load the agent again.  
    Optionally **Accessibility** for better window titles.
 
 5. **Edit `agent/config.yaml`:**
@@ -68,6 +77,9 @@ Done. Backend and agent start at login and keep running. Logs: `/tmp/teenmonitor
 - Confirm **API URL** matches how you opened the dashboard: if you're on the parent's device, it must be `http://<teen-laptop-ip>:8000` (no trailing slash). If you opened the dashboard at `http://192.168.1.105:8000`, leave API URL as that (or leave blank — the dashboard can default to the current host).  
 - Backend must be running on the teen's Mac (`launchctl list | grep teenmonitor` should show both services).  
 - Same WiFi; firewall on the teen's Mac may need to allow Python/incoming connections.
+
+**Screenshots show only desktop/screensaver (or menu bar + desktop):**  
+- The process that captures is **Python** (venv), not your terminal. If you can’t add python3 via the “+” button in Screen Recording, use the **run-once-from-Terminal** workaround in step 4 above: run `~/buddyguard/venv/bin/python -m agent.agent` from Terminal, allow the macOS prompt when it appears, then stop and use LaunchAgent again.
 
 ---
 
