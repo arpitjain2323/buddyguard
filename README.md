@@ -74,6 +74,9 @@ Done. Backend and agent start at login. The agent runs inside **BuddyGuardAgent.
 **Screenshots show only desktop/screensaver when using LaunchAgent:**  
 - The agent must run in your graphical session. It now runs via **BuddyGuardAgent.app**; add **BuddyGuardAgent.app** to Screen Recording (step 4). Unload and load the agent plist, then log out and back in (or restart) so the app is started by the LaunchAgent with the new setup.
 
+**PIL "incompatible architecture (have 'arm64', need 'x86_64')" (or the reverse):**  
+- The venv was likely created under Rosetta (x86_64) while the app runs as arm64 (or vice versa). Recreate the venv for your Mac’s native architecture: run `bash scripts/recreate-venv-native.sh` from the project folder, then start the agent again. On Apple Silicon, that script creates an arm64 venv so it matches the app.
+
 ---
 
 ## Requirements

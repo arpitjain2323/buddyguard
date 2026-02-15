@@ -21,11 +21,15 @@ if [[ ! -f "$BACKEND_PLIST" ]] || [[ ! -f "$AGENT_PLIST" ]]; then
   exit 1
 fi
 
-# Ensure venv exists and has deps
+# Ensure venv exists and has deps (use native arch on Apple Silicon to avoid PIL/Rosetta mismatch)
 VENV="$PROJECT_ROOT/venv"
 if [[ ! -x "$VENV/bin/python" ]]; then
   echo "Creating venv at $VENV ..."
-  python3 -m venv "$VENV"
+  if [[ "$(uname -m)" = "arm64" ]]; then
+    arch -arm64 python3 -m venv "$VENV"
+  else
+    python3 -m venv "$VENV"
+  fi
   "$VENV/bin/pip" install -q -r "$PROJECT_ROOT/backend/requirements.txt" -r "$PROJECT_ROOT/agent/requirements.txt"
 else
   echo "Using existing venv at $VENV"
